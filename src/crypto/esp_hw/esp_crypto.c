@@ -16,6 +16,10 @@
  * - BLAKE2s: Software only (no hardware support)
  */
 
+#ifndef CONFIG_WIREGUARD_USE_HW_CRYPTO
+#error "esp_crypto.c should only be compiled when CONFIG_WIREGUARD_USE_HW_CRYPTO is enabled"
+#endif
+
 #include "esp_crypto.h"
 #include "esp_log.h"
 #include "esp_system.h"

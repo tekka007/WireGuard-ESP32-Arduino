@@ -195,7 +195,7 @@ bool WireGuard_saveConfig(const char* privateKey, const char* publicKey,
 
     // Store resolved IP for faster reconnect
     if(resolvedEndpointIP && *resolvedEndpointIP != IPAddress(0, 0, 0, 0)) {
-        uint32_t ip = resolvedEndpointIP->v4();
+        uint32_t ip = static_cast<uint32_t>(*resolvedEndpointIP);
         nvs_set_u32(nvs, "endpoint_ip", ip);
     } else {
         nvs_set_u32(nvs, "endpoint_ip", 0);

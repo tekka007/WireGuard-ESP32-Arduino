@@ -102,10 +102,10 @@ bool crypto_equal(const void *a, const void *b, size_t size);
 // Optional: Initialize hardware crypto (call from wireguard_platform_init)
 void esp_crypto_platform_init(void);
 
-#endif /* _CRYPTO_H_ */
-
-
+//=============================================================================
 // Endian / unaligned helper macros
+//=============================================================================
+
 #define U8C(v) (v##U)
 #define U32C(v) (v##U)
 
@@ -160,7 +160,7 @@ void esp_crypto_platform_init(void);
     (p)[5] = U8V((v) >> 40); \
     (p)[6] = U8V((v) >> 48); \
     (p)[7] = U8V((v) >> 56); \
-} while (0)
+  } while (0)
 
 #define U64TO8_BIG(p, v) \
   do { \
@@ -172,11 +172,7 @@ void esp_crypto_platform_init(void);
     (p)[2] = U8V((v) >> 40); \
     (p)[1] = U8V((v) >> 48); \
     (p)[0] = U8V((v) >> 56); \
-} while (0)
-
-
-void crypto_zero(void *dest, size_t len);
-bool crypto_equal(const void *a, const void *b, size_t size);
+  } while (0)
 
 #endif /* _CRYPTO_H_ */
 

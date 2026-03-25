@@ -16,6 +16,8 @@
 #include "WireGuardTypes.h"
 #include "nvs_flash.h"
 #include "nvs.h"
+#include "crypto.h"              // For wireguard_x25519 and wireguard_random_bytes
+#include "wireguard-platform.h" // For wireguard_random_bytes declaration
 
 #include <algorithm>
 #include <string>
@@ -110,7 +112,8 @@ bool WireGuard_saveConfig(const char* privateKey, const char* publicKey,
 
     // Store resolved IP if provided
     if (resolvedEndpointIP && *resolvedEndpointIP != IPAddress(0, 0, 0, 0)) {
-        uint32_t ip = resolvedEndpointIP->v4();
+        // Convert IPAddress to uint32_t (IPv4 only)
+        uint32_t ip = static_cast<uint32_t>(*resolvedEndpointIP);
         nvs_set_u32(nvs, WG_NVS_ENDPOINT_IP, ip);
     } else {
         nvs_set_u32(nvs, WG_NVS_ENDPOINT_IP, 0);
@@ -306,9 +309,9 @@ bool WireGuard_generateKeyPair(char* out_private, size_t priv_buf_len,
     uint8_t priv[32];
     wireguard_random_bytes(priv, 32);
 
-    // Derive public key (X25519)
+    // Derive public key (X25519) using base point
     uint8_t pub[32];
-    if (!x25519(pub, priv, base_point)) {
+    if (!wireguard_x25519(pub, priv, X25519_BASE_POINT)) {
         setError(WG_ERR_CRYPTO, "X25519 key generation failed");
         return false;
     }
