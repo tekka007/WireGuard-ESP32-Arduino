@@ -53,6 +53,10 @@
 
 void wireguard_platform_init();
 
+// Optional: Initialize ESP32 hardware crypto acceleration (if enabled)
+// This is a no-op if CONFIG_WIREGUARD_USE_HW_CRYPTO is not set
+void esp_crypto_platform_init(void);
+
 // The number of milliseconds since system boot - for LwIP systems this could be sys_now()
 uint32_t wireguard_sys_now();
 

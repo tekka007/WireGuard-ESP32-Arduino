@@ -12,6 +12,10 @@
 #include "mbedtls/ctr_drbg.h"
 #include "esp_system.h"
 
+#ifdef CONFIG_WIREGUARD_USE_HW_CRYPTO
+#include "crypto/esp_hw/esp_crypto.h"
+#endif
+
 static struct mbedtls_ctr_drbg_context random_context;
 static struct mbedtls_entropy_context entropy_context;
 static bool is_platform_initialized = false;
@@ -24,6 +28,11 @@ static int entropy_hw_random_source( void *data, unsigned char *output, size_t l
 
 void wireguard_platform_init() {
 	if( is_platform_initialized ) return;
+
+	// Initialize hardware crypto if enabled
+	#ifdef CONFIG_WIREGUARD_USE_HW_CRYPTO
+	esp_crypto_platform_init();
+	#endif
 
 	mbedtls_entropy_init(&entropy_context);
 	mbedtls_ctr_drbg_init(&random_context);
