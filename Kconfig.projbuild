@@ -1,0 +1,62 @@
+# WireGuard-ESP32 Configuration
+#
+# This file is used by PlatformIO and can be imported into Arduino IDE
+# Place in the root of the library for Arduino IDE to auto-detect
+
+menu "WireGuard ESP32 Configuration"
+
+    config WIREGUARD_MAX_PEERS
+        int "Maximum number of peers"
+        range 1 5
+        default 1
+        help
+            Maximum number of WireGuard peers supported.
+            Increase to 3-5 for multiple endpoint support.
+            Each peer uses ~1KB of RAM.
+
+    config WIREGUARD_ENABLE_NVS
+        bool "Enable persistent storage (NVS)"
+        default y
+        help
+            Save handshake state to non-volatile storage.
+            Enables instant recovery after reboot (avoids 2s handshake).
+            Requires NVS flash partition.
+
+    config WIREGUARD_ENABLE_IPV6
+        bool "Enable IPv6 support"
+        default n
+        help
+            Compile with IPv6 support. Allows both IPv4 and IPv6 endpoints.
+            Increases code size by ~5KB.
+
+    config WIREGUARD_USE_HW_CRYPTO
+        bool "Use hardware crypto acceleration (ESP32 V3+)"
+        default n
+        help
+            Use ESP32's cryptographic hardware accelerators for:
+            - X25519 key exchange
+            - ChaCha20-Poly1305 encryption
+            - BLAKE2s hashing
+            Requires ESP32 V3+ (or ESP32-S3) with crypto DMA.
+            Provides 10-50x performance improvement.
+
+    config WIREGUARD_ENABLE_DEBUG_LOGGING
+        bool "Enable debug logging"
+        default n
+        help
+            Compile with verbose WireGuard debug logs.
+            Disable for production (reduces code size and CPU).
+
+    config WIREGUARD_TIMER_INTERVAL_MS
+        int "Timer tick interval (ms)"
+        range 100 1000
+        default 400
+        help
+            Interval for WireGuard's internal timer.
+            Controls frequency of:
+            - Handshake retry
+            - Keepalive sending
+            - Key expiration checks
+            Lower = more responsive but higher CPU.
+
+endmenu

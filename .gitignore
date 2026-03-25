@@ -1,1 +1,40 @@
 build.sh
+# PlatformIO build artifacts
+.pio/
+build/
+tools/
+
+# ESP32 Arduino build
+**/bin/
+**/obj/
+
+# NVS storage (if using persistent storage)
+**/nvs.bin
+**/nvs_partition.csv
+
+# Test results
+test_output/
+.coverage/
+htmlcov/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Temporary files
+*.log
+*.tmp
+
+# Generated keys (don't commit these!)
+keys/
+*_private.key
+*_public.key
+
+# Factory firmware
+*.bin
+*.elf
+*.map
