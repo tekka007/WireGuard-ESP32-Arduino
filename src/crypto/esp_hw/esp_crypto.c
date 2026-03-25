@@ -23,15 +23,18 @@
 #include "esp_crypto.h"
 #include "esp_log.h"
 #include "esp_system.h"
-#include "mbedtls/x25519.h"
 #include "mbedtls/chachapoly.h"
-#include "mbedtls/blake2s.h"
 #include "mbedtls/entropy.h"
 #include "mbedtls/ctr_drbg.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include <string.h>
 #include <stdlib.h>
+
+// X25519: Use reference implementation (no mbedTLS support in Arduino core)
+// ESP32 has no hardware X25519 acceleration; mbedTLS in Arduino core lacks x25519.h
+// So we fall back to the reference crypto for X25519
+#include "../../refc/x25519.h"
 
 static const char* TAG = "ESP-CRYPTO";
 
@@ -86,12 +89,8 @@ static inline void cache_writeback(void *addr, size_t size) {
 #endif
 }
 
-// Helper: check if assembly optimizations are available
-static int mbedtls_x25519_has_hw(void) {
-    // ESP32 uses assembly-optimized X25519 in mbedTLS port
-    // ESP-IDF's mbedtls includes Xtensa/RISC-V optimized implementations
-    return 1;
-}
+// X25519: Use reference implementation (no mbedTLS X25519 in Arduino core)
+// ESP32 has no hardware X25519 acceleration
 
 // Helper: ChaCha20-Poly1305 with cache optimizations
 static int chacha20poly1305_encrypt_optimized(
@@ -319,41 +318,18 @@ int chacha20poly1305_decrypt_hw(
 }
 
 int x25519_hw(uint8_t *raw_public_key, const uint8_t *raw_private_key, const uint8_t *base_point) {
-    if(!hw_enabled || !mbedtls_x25519_has_hw()) return -1;
+    if(!hw_enabled) return -1;
 
-    // Use mbedTLS' x25519 which may have assembly optimizations
-    mbedtls_ecp_group grp;
-    mbedtls_mpi priv, pub;
-    int ret;
+    // Use reference X25519 implementation from crypto/refc/x25519.h
+    // No hardware acceleration for X25519 on ESP32
+    // Clamp = 1 (same as wireguard_x25519 macro in software mode)
+    int ret = x25519(raw_public_key, raw_private_key, base_point, 1);
 
-    mbedtls_ecp_group_init(&grp);
-    mbedtls_mpi_init(&priv);
-    mbedtls_mpi_init(&pub);
+    if(ret == 0) {
+        stats.x25519_ops++;
+    }
 
-    // Load private key
-    ret = mbedtls_mpi_read_binary(&priv, raw_private_key, 32);
-    if(ret != 0) goto cleanup;
-
-    // Set up Curve25519 group
-    ret = mbedtls_ecp_group_load(&grp, MBEDTLS_ECP_GRP_CURVE25519);
-    if(ret != 0) goto cleanup;
-
-    // Compute public key
-    ret = mbedtls_ecp_mul(&grp, &pub, &priv, &grp.G, mbedtls_ctr_drbg_random, &ctr_drbg);
-    if(ret != 0) goto cleanup;
-
-    // Export public key
-    ret = mbedtls_mpi_write_binary(&pub, raw_public_key, 32);
-    if(ret != 0) goto cleanup;
-
-    stats.x25519_ops++;
-
-cleanup:
-    mbedtls_mpi_free(&priv);
-    mbedtls_mpi_free(&pub);
-    mbedtls_ecp_group_free(&grp);
-
-    return ret == 0 ? 0 : -1;
+    return ret;
 }
 
 // Hook for WireGuard platform init to call
